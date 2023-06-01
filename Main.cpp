@@ -1,91 +1,81 @@
 #include <opencv2/opencv.hpp>
-#include "opencv2/objdetect.hpp"
-#include "opencv2/highgui.hpp"
-#include "opencv2/imgproc.hpp"
-#include "opencv2/videoio.hpp"
-#include <iostream>
 
 using namespace cv;
+using namespace std;
 
-int main()
-{
-    // Carregar o classificador Haar Cascade para detecção de rosto
+int main(){
+    // Carregar o Haar Cascade para detecção de rosto
     CascadeClassifier faceCascade;
     faceCascade.load("haarcascade_frontalface_default.xml");
 
     // Carregar a imagem do peixe
     Mat fishImage = imread("fish.png", IMREAD_UNCHANGED);
 
-    // Inicializar a webcam
-    VideoCapture cap(0);
-    if (!cap.isOpened())
-    {
-        std::cout << "Erro ao abrir a câmera!" << std::endl;
-        return -1;
+    // Inicializar a captura de vídeo da webcam
+    VideoCapture capture(0);
+    if (!capture.isOpened()){
+        cout << "Erro ao abrir a webcam" << std::endl;
+        return 1;
     }
 
-    // Loop principal do jogo
-    while (true)
-    {
+    namedWindow("Jogo", WINDOW_NORMAL);
+    resizeWindow("Jogo", 800, 600);  // Definir o tamanho desejado para a janela
+
+
+    while (true){
         Mat frame;
-        cap >> frame;
+        capture >> frame;
+
+        // Criar um quadrado transparente azulado que cobre a tela inteira
+        Mat overlay = frame.clone();
+        rectangle(overlay, Point(0, 0), Point(frame.cols, frame.rows), Scalar(250, 241, 122, 128), -1);
+        addWeighted(overlay, 0.5, frame, 0.5, 0, frame);
 
         // Converter a imagem para escala de cinza
         Mat grayFrame;
         cvtColor(frame, grayFrame, COLOR_BGR2GRAY);
 
-        // Detectar rostos na imagem
-        std::vector<Rect> faces;
-        faceCascade.detectMultiScale(grayFrame, faces, 1.1, 3, 0 | CASCADE_SCALE_IMAGE, Size(30, 30));
+        // Detectar os rostos na imagem
+        vector<Rect> faces;
+        faceCascade.detectMultiScale(grayFrame, faces);
 
-        // Desenhar o peixe no centro de cada rosto detectado
-        for (const Rect& face : faces)
-        {
-            // Calcular as coordenadas do centro do rosto
-            int faceCenterX = face.x + face.width / 2;
-            int faceCenterY = face.y + face.height / 2;
+        // Desenhar um retângulo ao redor de cada rosto detectado e colocar a imagem do peixe centralizada no rosto
+        for (const Rect& faceRect : faces) {
+            // Calcular as coordenadas para posicionar o peixe centralizado no rosto
+            int fishX = faceRect.x + (faceRect.width - fishImage.cols) / 2;
+            int fishY = faceRect.y + (faceRect.height - fishImage.rows) / 2;
 
-            // Calcular as coordenadas do canto superior esquerdo do peixe
-            int fishX = faceCenterX - fishImage.cols / 2;
-            int fishY = faceCenterY - fishImage.rows / 2;
+            // Verificar se o peixe cabe dentro do retângulo do rosto
+            if (fishX >= 0 && fishY >= 0 && fishX + fishImage.cols <= frame.cols && fishY + fishImage.rows <= frame.rows) {
+                // Copiar a imagem do peixe para a região do rosto na imagem original
+                Mat roi = frame(Rect(fishX, fishY, fishImage.cols, fishImage.rows));
+                Mat fishImageRGBA;
+                cvtColor(fishImage, fishImageRGBA, COLOR_BGR2BGRA);
 
-            // Verificar se as coordenadas estão dentro dos limites da imagem
-            if (fishX >= 0 && fishY >= 0 && fishX + fishImage.cols <= frame.cols && fishY + fishImage.rows <= frame.rows)
-            {
-                // Desenhar o peixe na imagem
-                for (int y = 0; y < fishImage.rows; y++)
-                {
-                    for (int x = 0; x < fishImage.cols; x++)
-                    {
-                        Vec4b fishPixel = fishImage.at<Vec4b>(y, x);
-
-                        // Se o pixel do peixe não for transparente, desenhe na imagem do jogo
-                        if (fishPixel[3] > 0)
-                        {
-                            Vec3b& gamePixel = frame.at<Vec3b>(fishY + y, fishX + x);
-                            gamePixel[0] = fishPixel[0];
-                            gamePixel[1] = fishPixel[1];
-                            gamePixel[2] = fishPixel[2];
+                for (int y = 0; y < fishImage.rows; y++) {
+                    for (int x = 0; x < fishImage.cols; x++) {
+                        Vec4b pixel = fishImageRGBA.at<Vec4b>(y, x);
+                        if (pixel[3] > 0) {  // Verificar se o pixel não é transparente
+                            roi.at<Vec3b>(y, x) = Vec3b(pixel[0], pixel[1], pixel[2]);
                         }
                     }
                 }
             }
+
+            // Desenhar um retângulo ao redor do rosto
+            rectangle(frame, faceRect, Scalar(250, 241, 122), 2);
         }
 
-       
-        // Mostrar a imagem do jogo
-        imshow("Fish Game", frame);
+        imshow("Jogo", frame);
 
-        // Verificar se a tecla 'q' foi pressionada para sair do jogo
-        if (waitKey(1) == 'q')
-        {
+        // Verificar se a tecla 'Esc' foi pressionada para sair do loop
+        if (waitKey(1) == 27) {
             break;
         }
     }
 
-    // Encerrar o jogo e liberar os recursos
-    cap.release();
     destroyAllWindows();
+    capture.release();
 
     return 0;
 }
