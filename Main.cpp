@@ -1,81 +1,158 @@
 #include <opencv2/opencv.hpp>
+#include <vector>
+#include <cstdlib>
+#include <ctime>
 
 using namespace cv;
 using namespace std;
 
-int main(){
-    // Carregar o Haar Cascade para detecção de rosto
-    CascadeClassifier faceCascade;
-    faceCascade.load("haarcascade_frontalface_default.xml");
+class GameObject {
+public:
+    Mat image;
+    Point position;
 
-    // Carregar a imagem do peixe
-    Mat fishImage = imread("fish.png", IMREAD_UNCHANGED);
-
-    // Inicializar a captura de vídeo da webcam
-    VideoCapture capture(0);
-    if (!capture.isOpened()){
-        cout << "Erro ao abrir a webcam" << std::endl;
-        return 1;
+    GameObject(const Mat& image, const Point& position)
+        : image(image), position(position) {
     }
 
+    void draw(Mat& frame) {
+        Rect roi(position, image.size());
+        Mat obstacleImageRGBA;
+        cvtColor(image, obstacleImageRGBA, COLOR_BGR2BGRA);
+
+        for (int y = 0; y < image.rows; y++) {
+            for (int x = 0; x < image.cols; x++) {
+                Vec4b pixel = obstacleImageRGBA.at<Vec4b>(y, x);
+                if (pixel[3] > 0) { // Verificar se o pixel não é transparente
+
+                    Vec3b& framePixel = frame.at<Vec3b>(position.y + y, position.x + x);
+                    framePixel = Vec3b(pixel[0], pixel[1], pixel[2]);
+                }
+            }
+        }
+    }
+};
+
+int main() {
+    // Carregar o haarcascade para detecção de rosto
+    CascadeClassifier faceCascade;
+    if (!faceCascade.load("haarcascade_frontalface_default.xml")) {
+        std::cout << "Não foi possível carregar o arquivo XML do classificador de cascata." << std::endl;
+        return -1;
+    }
+
+    // Carregar a imagem do peixe e verificar se foi carregada corretamente
+    Mat fishImage = imread("fish.png", IMREAD_UNCHANGED);
+    if (fishImage.empty()) {
+        std::cout << "Não foi possível carregar a imagem do peixe." << std::endl;
+        return -1;
+    }
+
+    // Carregar a imagem do obstáculo e verificar se foi carregada corretamente
+    Mat obstacleImage = imread("obstacle.png", IMREAD_UNCHANGED);
+    if (obstacleImage.empty()) {
+        std::cout << "Não foi possível carregar a imagem do obstáculo." << std::endl;
+        return -1;
+    }
+
+    // Carregar as imagens dos obstáculos adicionais
+    Mat sharkImage = imread("shark.png", IMREAD_UNCHANGED);
+    if (sharkImage.empty()) {
+        std::cout << "Não foi possível carregar a imagem do tubarão." << std::endl;
+        return -1;
+    }
+    Mat pinkJellyImage = imread("pinkjelly.png", IMREAD_UNCHANGED);
+    if (pinkJellyImage.empty()) {
+        std::cout << "Não foi possível carregar a imagem da água-viva rosa." << std::endl;
+        return -1;
+    }
+    Mat blueJellyImage = imread("bluejelly.png", IMREAD_UNCHANGED);
+    if (blueJellyImage.empty()) {
+        std::cout << "Não foi possível carregar a imagem da água-viva azul." << std::endl;
+        return -1;
+    }
+
+    // Iniciar a captura de vídeo da webcam
+    VideoCapture capture(0);
+    if (!capture.isOpened()) {
+        std::cout << "Não foi possível iniciar a captura de vídeo." << std::endl;
+        return -1;
+    }
+
+    // Configurar o tamanho da janela do jogo
+    int windowWidth = capture.get(CAP_PROP_FRAME_WIDTH);
+    int windowHeight = capture.get(CAP_PROP_FRAME_HEIGHT);
+
+    // Criar uma janela para exibir o jogo
     namedWindow("Jogo", WINDOW_NORMAL);
-    resizeWindow("Jogo", 800, 600);  // Definir o tamanho desejado para a janela
+    resizeWindow("Jogo", windowWidth, windowHeight);
 
+    // Configurar os obstáculos
+    vector<GameObject> obstacles;
+    int obstacleSpacing = 200;  // Espaçamento entre os obstáculos
+    int obstacleSpeed = 5;      // Velocidade dos obstáculos
 
-    while (true){
+    // Loop principal do jogo
+    while (true) {
+        // Capturar o próximo frame da webcam
         Mat frame;
         capture >> frame;
 
-        // Criar um quadrado transparente azulado que cobre a tela inteira
-        Mat overlay = frame.clone();
-        rectangle(overlay, Point(0, 0), Point(frame.cols, frame.rows), Scalar(250, 241, 122, 128), -1);
-        addWeighted(overlay, 0.5, frame, 0.5, 0, frame);
+        // Verificar se o frame está vazio (fim da captura)
+        if (frame.empty())
+            break;
 
-        // Converter a imagem para escala de cinza
+        // Converter o frame para escala de cinza
         Mat grayFrame;
         cvtColor(frame, grayFrame, COLOR_BGR2GRAY);
 
-        // Detectar os rostos na imagem
+        // Detectar rostos no frame usando o haarcascade
         vector<Rect> faces;
-        faceCascade.detectMultiScale(grayFrame, faces);
+        faceCascade.detectMultiScale(grayFrame, faces, 1.3, 5);
 
-        // Desenhar um retângulo ao redor de cada rosto detectado e colocar a imagem do peixe centralizada no rosto
-        for (const Rect& faceRect : faces) {
-            // Calcular as coordenadas para posicionar o peixe centralizado no rosto
-            int fishX = faceRect.x + (faceRect.width - fishImage.cols) / 2;
-            int fishY = faceRect.y + (faceRect.height - fishImage.rows) / 2;
+        // Desenhar os rostos detectados no frame e centralizar o peixe em cada rosto
+        for (const auto& face : faces) {
+            // Calcular a posição do peixe centralizado no rosto
+            int fishX = face.x + (face.width - fishImage.cols) / 2;
+            int fishY = face.y + (face.height - fishImage.rows) / 2;
+            Point fishPosition(fishX, fishY);
 
-            // Verificar se o peixe cabe dentro do retângulo do rosto
-            if (fishX >= 0 && fishY >= 0 && fishX + fishImage.cols <= frame.cols && fishY + fishImage.rows <= frame.rows) {
-                // Copiar a imagem do peixe para a região do rosto na imagem original
-                Mat roi = frame(Rect(fishX, fishY, fishImage.cols, fishImage.rows));
-                Mat fishImageRGBA;
-                cvtColor(fishImage, fishImageRGBA, COLOR_BGR2BGRA);
-
-                for (int y = 0; y < fishImage.rows; y++) {
-                    for (int x = 0; x < fishImage.cols; x++) {
-                        Vec4b pixel = fishImageRGBA.at<Vec4b>(y, x);
-                        if (pixel[3] > 0) {  // Verificar se o pixel não é transparente
-                            roi.at<Vec3b>(y, x) = Vec3b(pixel[0], pixel[1], pixel[2]);
-                        }
-                    }
-                }
-            }
-
-            // Desenhar um retângulo ao redor do rosto
-            rectangle(frame, faceRect, Scalar(250, 241, 122), 2);
+            // Criar o objeto do peixe e desenhá-lo no frame
+            GameObject fish(fishImage, fishPosition);
+            fish.draw(frame);
         }
 
+        // Desenhar os obstáculos no frame
+        for (auto& obstacle : obstacles) {
+            obstacle.draw(frame);
+            obstacle.position.x -= obstacleSpeed;
+        }
+
+        // Adicionar novos obstáculos
+        if (obstacles.empty() || obstacles.back().position.x <= windowWidth - obstacleSpacing) {
+            Point obstaclePosition(windowWidth, rand() % (windowHeight - obstacleImage.rows));
+            obstacles.emplace_back(obstacleImage, obstaclePosition);
+            obstacles.emplace_back(sharkImage, obstaclePosition);
+            obstacles.emplace_back(pinkJellyImage, obstaclePosition);
+            obstacles.emplace_back(blueJellyImage, obstaclePosition);
+        }
+
+        // Remover obstáculos que saíram da tela
+        obstacles.erase(remove_if(obstacles.begin(), obstacles.end(),
+            [windowWidth](const GameObject& obstacle) { return obstacle.position.x + obstacle.image.cols < 0; }),
+            obstacles.end());
+
+        // Exibir o frame resultante
         imshow("Jogo", frame);
 
-        // Verificar se a tecla 'Esc' foi pressionada para sair do loop
-        if (waitKey(1) == 27) {
+        // Verificar se a tecla 'Esc' foi pressionada para sair do jogo
+        if (waitKey(1) == 27)
             break;
-        }
     }
 
-    destroyAllWindows();
+    // Encerrar a captura de vídeo e fechar a janela do jogo
     capture.release();
+    destroyAllWindows();
 
     return 0;
 }
