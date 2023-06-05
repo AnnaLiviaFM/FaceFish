@@ -37,45 +37,45 @@ int main() {
     // Carregar o haarcascade para detecção de rosto
     CascadeClassifier faceCascade;
     if (!faceCascade.load("haarcascade_frontalface_default.xml")) {
-        std::cout << "Não foi possível carregar o arquivo XML do classificador de cascata." << std::endl;
+        cout << "Não foi possível carregar o arquivo XML do classificador de cascata." << std::endl;
         return -1;
     }
 
     // Carregar a imagem do peixe e verificar se foi carregada corretamente
     Mat fishImage = imread("fish.png", IMREAD_UNCHANGED);
     if (fishImage.empty()) {
-        std::cout << "Não foi possível carregar a imagem do peixe." << std::endl;
+        cout << "Não foi possível carregar a imagem do peixe." << std::endl;
         return -1;
     }
 
-    // Carregar a imagem do obstáculo e verificar se foi carregada corretamente
-    Mat obstacleImage = imread("obstacle.png", IMREAD_UNCHANGED);
+    // Carregar a imagem do lixo e verificar se foi carregada corretamente
+    Mat obstacleImage = imread("trash.png", IMREAD_UNCHANGED);
     if (obstacleImage.empty()) {
-        std::cout << "Não foi possível carregar a imagem do obstáculo." << std::endl;
+        cout << "Não foi possível carregar a imagem do lixo." << std::endl;
         return -1;
     }
 
     // Carregar as imagens dos obstáculos adicionais
     Mat sharkImage = imread("shark.png", IMREAD_UNCHANGED);
     if (sharkImage.empty()) {
-        std::cout << "Não foi possível carregar a imagem do tubarão." << std::endl;
+        cout << "Não foi possível carregar a imagem do tubarão." << std::endl;
         return -1;
     }
     Mat pinkJellyImage = imread("pinkjelly.png", IMREAD_UNCHANGED);
     if (pinkJellyImage.empty()) {
-        std::cout << "Não foi possível carregar a imagem da água-viva rosa." << std::endl;
+        cout << "Não foi possível carregar a imagem da água-viva rosa." << std::endl;
         return -1;
     }
     Mat blueJellyImage = imread("bluejelly.png", IMREAD_UNCHANGED);
     if (blueJellyImage.empty()) {
-        std::cout << "Não foi possível carregar a imagem da água-viva azul." << std::endl;
+        cout << "Não foi possível carregar a imagem da água-viva azul." << std::endl;
         return -1;
     }
 
     // Iniciar a captura de vídeo da webcam
     VideoCapture capture(0);
     if (!capture.isOpened()) {
-        std::cout << "Não foi possível iniciar a captura de vídeo." << std::endl;
+        cout << "Não foi possível iniciar a captura de vídeo." << std::endl;
         return -1;
     }
 
@@ -84,8 +84,8 @@ int main() {
     int windowHeight = capture.get(CAP_PROP_FRAME_HEIGHT);
 
     // Criar uma janela para exibir o jogo
-    namedWindow("Jogo", WINDOW_NORMAL);
-    resizeWindow("Jogo", windowWidth, windowHeight);
+    namedWindow("FaceFish", WINDOW_NORMAL);
+    resizeWindow("FaceFish", windowWidth, windowHeight);
 
     // Configurar os obstáculos
     vector<GameObject> obstacles;
@@ -143,7 +143,7 @@ int main() {
             obstacles.end());
 
         // Exibir o frame resultante
-        imshow("Jogo", frame);
+        imshow("FaceFish", frame);
 
         // Verificar se a tecla 'Esc' foi pressionada para sair do jogo
         if (waitKey(1) == 27)
