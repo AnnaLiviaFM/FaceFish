@@ -35,6 +35,7 @@ public:
 
 int main() {
     // Carregar o haarcascade para detecção de rosto
+    int maxTimeInterval = 5000; // tempo em milisegundos 
     CascadeClassifier faceCascade;
     if (!faceCascade.load("haarcascade_frontalface_default.xml")) {
         cout << "Não foi possível carregar o arquivo XML do classificador de cascata." << std::endl;
@@ -131,12 +132,14 @@ int main() {
         // Adicionar novos obstáculos
         if (obstacles.empty() || obstacles.back().position.x <= windowWidth - obstacleSpacing) {
             Point obstaclePosition(windowWidth, rand() % (windowHeight - obstacleImage.rows));
-            obstacles.emplace_back(obstacleImage, obstaclePosition);
+            Point obstaclePosition1(windowWidth, rand() % (windowHeight - obstacleImage.rows));
+            Point obstaclePosition2(windowWidth, rand() % (windowHeight - obstacleImage.rows));
+            Point obstaclePosition3(windowWidth, rand() % (windowHeight - obstacleImage.rows));
             obstacles.emplace_back(sharkImage, obstaclePosition);
-            obstacles.emplace_back(pinkJellyImage, obstaclePosition);
-            obstacles.emplace_back(blueJellyImage, obstaclePosition);
-        }
-
+            obstacles.emplace_back(obstacleImage, obstaclePosition1);
+            //obstacles.emplace_back(pinkJellyImage, obstaclePosition2);
+            //obstacles.emplace_back(blueJellyImage, obstaclePosition3);
+        }       
         // Remover obstáculos que saíram da tela
         obstacles.erase(remove_if(obstacles.begin(), obstacles.end(),
             [windowWidth](const GameObject& obstacle) { return obstacle.position.x + obstacle.image.cols < 0; }),
