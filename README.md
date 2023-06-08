@@ -30,4 +30,4 @@ Agora você está pronto para embarcar em uma emocionante jornada submarina! Des
 "FaceFish: O Alerta dos Oceanos" é um jogo desenvolvido por nossa equipe apaixonada por jogos e tecnologia. Esperamos que você tenha uma experiência divertida e imersiva enquanto mergulha nessa aventura aquática única. Agradecemos por jogar e ficamos ansiosos para receber seu feedback valioso!
 
 Feito por Anna livia Freire Machado e Emmanuel Aprígio Cavalcanti dos Santos 
-=======
+=
