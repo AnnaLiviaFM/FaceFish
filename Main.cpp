@@ -31,6 +31,7 @@ public:
         }
     }
 };
+//void gameOverScene() {}
 int main() {
     // Carregar o haarcascade para detecção de rosto
     int maxTimeInterval = 5000; // tempo em milisegundos 
@@ -82,7 +83,6 @@ int main() {
         return -1;
     }
     
-    
     // Configurar o tamanho da janela do jogo
     int windowWidth = capture.get(CAP_PROP_FRAME_WIDTH);
     int windowHeight = capture.get(CAP_PROP_FRAME_HEIGHT);
@@ -97,7 +97,7 @@ int main() {
     int obstacleSpeed = 5;      // Velocidade dos obstáculos
 
     // Configurar o objeto ponto
-     GameObject point(PointImage, Point(windowWidth, rand() % (windowHeight - PointImage.rows)));
+    GameObject point(PointImage, Point(windowWidth, rand() % (windowHeight - PointImage.rows)));
 
     // Variável para controlar a contagem de pontos
     int score = 0;
@@ -111,6 +111,9 @@ int main() {
         // Verificar se o frame está vazio (fim da captura)
         if (frame.empty())
             break;
+        // Espelhar o frame horizontalmente
+        flip(frame, frame, 1);
+
 
         // Converter o frame para escala de cinza
         Mat grayFrame;
@@ -119,25 +122,22 @@ int main() {
         // Detectar rostos no frame usando o haarcascade
         vector<Rect> faces;
         faceCascade.detectMultiScale(grayFrame, faces, 1.3, 5);
-
-        // Desenhar os rostos detectados no frame e centralizar o peixe em cada rosto
-        for (const auto& face : faces) {
-            // Calcular a posição do peixe centralizado no rosto
+        
+       // Desenhar os rostos detectados no frame e centralizar o peixe em cada rosto
+        for (const auto& face : faces) {// Calcular a posição do peixe centralizado no rosto
             int fishX = face.x + (face.width - fishImage.cols) / 2;
             int fishY = face.y + (face.height - fishImage.rows) / 2;
             Point fishPosition(fishX, fishY);
 
-
             // Criar o objeto do peixe e desenhá-lo no frame
             GameObject fish(fishImage, fishPosition);
             fish.draw(frame);
+            
             // Calcular a bounding box do peixe
             Rect fishBoundingBox(fishX, fishY, fishImage.cols, fishImage.rows);
 
-
             // Verificar colisão entre o peixe e os obstáculos
-            for (auto& obstacle : obstacles) {
-                // Calcular as bounding boxes dos obstáculos
+            for (auto& obstacle : obstacles) {// Calcular as bounding boxes dos obstáculos
                 Rect obstacleBoundingBox(obstacle.position.x, obstacle.position.y, obstacle.image.cols, obstacle.image.rows);
 
                 // Verificar se ocorre colisão entre as caixas dos obstaculos
@@ -147,7 +147,8 @@ int main() {
                     fishBoundingBox.y + fishBoundingBox.height > obstacleBoundingBox.y) {
                     cout<<"VOCE MORREU"<<endl;
                     cout<<"Sua pontuação foi: "<<score<<endl;
-                }/* Remover pontos obstáculos colididos
+                    //return gameOverScene();
+                }//Remover pontos obstáculos colididos
                 obstacles.erase(remove_if(obstacles.begin(), obstacles.end(),
                 [fishX, fishY, fishImage](const GameObject& obstacle) {
                     Rect obstacleBoundingBox(obstacle.position.x, obstacle.position.y, obstacle.image.cols, obstacle.image.rows);
@@ -157,9 +158,8 @@ int main() {
                         fishBoundingBox.y < obstacleBoundingBox.y + obstacleBoundingBox.height &&
                         fishBoundingBox.y + fishBoundingBox.height > obstacleBoundingBox.y;
                 }),
-                obstacles.end());*/
-            }
-             // Verificar colisão entre o peixe e o ponto
+                obstacles.end());
+            }// Verificar colisão entre o peixe e o ponto
             Rect pointBoundingBox(point.position.x, point.position.y, point.image.cols, point.image.rows);
             if (fishBoundingBox.x < pointBoundingBox.x + pointBoundingBox.width &&
                 fishBoundingBox.x + fishBoundingBox.width > pointBoundingBox.x &&
@@ -168,8 +168,7 @@ int main() {
                 cout << "Colisão com ponto!" << endl;
                 score++;
                 point.position = Point(windowWidth, rand() % (windowHeight - PointImage.rows));
-            }
-            // Remover pontos colididos
+            }// Remover pontos colididos
             if (fishBoundingBox.x < pointBoundingBox.x + pointBoundingBox.width &&
                 fishBoundingBox.x + fishBoundingBox.width > pointBoundingBox.x &&
                 fishBoundingBox.y < pointBoundingBox.y + pointBoundingBox.height &&
@@ -184,13 +183,11 @@ int main() {
                     }),
                     obstacles.end());
             }
-        }
-        // Desenhar os obstáculos no frame
+        }// Desenhar os obstáculos no frame
         for (auto& obstacle : obstacles) {
             obstacle.draw(frame);
             obstacle.position.x -= obstacleSpeed;
-        }
-        // Desenhar o ponto no frame
+        }// Desenhar o ponto no frame
         point.draw(frame);
         point.position.x -= obstacleSpeed;
 
@@ -210,16 +207,13 @@ int main() {
             Point obstaclePosition3(windowWidth, rand() % (windowHeight - obstacleImage.rows));
             obstacles.emplace_back(blueJellyImage, obstaclePosition3);
             }   
-        }
-        // Exibir o frame resultante
+        }// Exibir o frame resultante
         imshow("FaceFish", frame);
-
+        
         // Verificar se a tecla 'Esc' foi pressionada para sair do jogo
         if (waitKey(1) == 27)
             break;
-    }
-
-    // Encerrar a captura de vídeo e fechar a janela do jogo
+    }// Encerrar a captura de vídeo e fechar a janela do jogo
     capture.release();
     destroyAllWindows();
 

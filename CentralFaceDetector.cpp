@@ -103,7 +103,7 @@ void detectAndDraw( Mat& img, CascadeClassifier& cascade, double scale, bool try
     resize( img, smallImg, Size(), fx, fx, INTER_LINEAR_EXACT );
     if( tryflip )
         flip(smallImg, smallImg, 1);
-    cvtColor( smallImg, gray, COLOR_BGR2GRAY );
+        cvtColor( smallImg, gray, COLOR_BGR2GRAY );
     equalizeHist( gray, gray );
 
     t = (double)getTickCount();
