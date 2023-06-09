@@ -207,6 +207,11 @@ int main() {
             Point obstaclePosition3(windowWidth, rand() % (windowHeight - obstacleImage.rows));
             obstacles.emplace_back(blueJellyImage, obstaclePosition3);
             }   
+            if (score % 2 == 0) {
+            // Adicione um novo ponto
+            Point pointPosition(windowWidth, rand() % (windowHeight - PointImage.rows));
+            obstacles.emplace_back(PointImage, pointPosition);
+        }
         }// Exibir o frame resultante
         imshow("FaceFish", frame);
         
