@@ -4,7 +4,6 @@
 #include <ctime>
 #include <fstream>
 
-
 using namespace cv;
 using namespace std;
 class GameObject {
@@ -33,6 +32,7 @@ public:
         }
     }
 };
+
 //salvar pontuação em arquivo
 void salvarPontuacao(int score) {
     std::ofstream arquivo("score.txt");
@@ -43,10 +43,65 @@ void salvarPontuacao(int score) {
     } else {
         std::cout << "Erro ao abrir o arquivo de pontuação." << std::endl;
     }
+} 
+bool beatRecord = false;//veriicador de record;
+
+void gameOverScene(int score, int highScore) {
+    Mat frame(480, 640, CV_8UC3, Scalar(0, 0, 0));
+
+    // Definir as propriedades do texto
+    int fontFace = FONT_HERSHEY_SIMPLEX;
+    double fontScale = 1.5;
+    int thickness = 2;
+    int baseline = 0;
+
+    // Escrever o texto "Game Over"
+    string gameOverText = "Game Over";
+    Size textSize = getTextSize(gameOverText, fontFace, fontScale, thickness, &baseline);
+    Point textOrg((frame.cols - textSize.width) / 2, (frame.rows + textSize.height) / 2);
+    putText(frame, gameOverText, textOrg, fontFace, fontScale, Scalar(255, 255, 255), thickness);
+
+    // Escrever a pontuação
+    string scoreText = "Score: " + to_string(score);
+    textSize = getTextSize(scoreText, fontFace, fontScale, thickness, &baseline);
+    textOrg = Point((frame.cols - textSize.width) / 2, textOrg.y + textSize.height * 2);
+    putText(frame, scoreText, textOrg, fontFace, fontScale, Scalar(255, 255, 255), thickness);
+
+    // Escrever a pontuação mais alta
+    string highScoreText = "High Score: " + to_string(highScore);
+    textSize = getTextSize(highScoreText, fontFace, fontScale, thickness, &baseline);
+    textOrg = Point((frame.cols - textSize.width) / 2, textOrg.y + textSize.height * 2);
+    putText(frame, highScoreText, textOrg, fontFace, fontScale, Scalar(255, 255, 255), thickness);
+    // Verificar se o recorde foi batido e exibir mensagem de parabéns
+    if (beatRecord) {
+        string congratsText = "Parabéns! Novo recorde!";
+        textSize = getTextSize(congratsText, fontFace, fontScale, thickness, &baseline);
+        textOrg = Point((frame.cols - textSize.width) / 2, textOrg.y + textSize.height * 2);
+        putText(frame, congratsText, textOrg, fontFace, fontScale, Scalar(255, 255, 255), thickness);
+    }
+
+    // Exibir a cena de Game Over
+    namedWindow("Game Over", WINDOW_AUTOSIZE);
+    imshow("Game Over", frame);
+    waitKey(0);
+    destroyWindow("Game Over");
 }
 
-//void gameOverScene() {}
 int main() {
+     Mat frame(480, 640, CV_8UC3, Scalar(0, 0, 0));
+    int score = 0;// Variável para controlar a contagem de pontos
+    int highScore = 0;  // Variável para armazenar a pontuação mais alta
+
+    // Verificar a pontuação mais alta do arquivo
+    std::ifstream arquivo("score.txt");
+    if (arquivo.is_open()) {
+        arquivo >> highScore;
+        arquivo.close();
+        std::cout << "Pontuação mais alta: " << highScore << std::endl;
+    }
+    else {
+        std::cout << "Arquivo de pontuação não encontrado." << std::endl;
+    }
     // Carregar o haarcascade para detecção de rosto
     int maxTimeInterval = 5000; // tempo em milisegundos 
     CascadeClassifier faceCascade;
@@ -62,17 +117,15 @@ int main() {
         return -1;
     }
 
-    // Carregar a imagem do lixo e verificar se foi carregada corretamente
-    Mat obstacleImage = imread("trash.png", IMREAD_UNCHANGED);
-    if (obstacleImage.empty()) {
-        cout << "Não foi possível carregar a imagem do lixo." << std::endl;
-        return -1;
-    }
-
     // Carregar as imagens dos obstáculos adicionais
     Mat sharkImage = imread("shark.png", IMREAD_UNCHANGED);
     if (sharkImage.empty()) {
         cout << "Não foi possível carregar a imagem do tubarão." << std::endl;
+        return -1;
+    }
+    Mat obstacleImage = imread("trash.png", IMREAD_UNCHANGED);
+    if (obstacleImage.empty()) {
+        cout << "Não foi possível carregar a imagem do lixo." << std::endl;
         return -1;
     }
     Mat pinkJellyImage = imread("pinkjelly.png", IMREAD_UNCHANGED);
@@ -109,13 +162,11 @@ int main() {
     vector<GameObject> obstacles;
     int obstacleSpacing = 400;  // Espaçamento entre os obstáculos
     int obstacleSpeed = 5;      // Velocidade dos obstáculos
+    //Configurar os obstáculos
+    GameObject shark(sharkImage, Point(windowWidth, rand() % (windowHeight - sharkImage.rows)));
 
     // Configurar o objeto ponto
     GameObject point(PointImage, Point(windowWidth, rand() % (windowHeight - PointImage.rows)));
-
-    
-    int score = 0;// Variável para controlar a contagem de pontos
-    int highScore = 0;  // Variável para armazenar a pontuação mais alta
 
     // Loop principal do jogo
     while (true) {
@@ -160,9 +211,9 @@ int main() {
                     fishBoundingBox.x + fishBoundingBox.width > obstacleBoundingBox.x &&
                     fishBoundingBox.y < obstacleBoundingBox.y + obstacleBoundingBox.height &&
                     fishBoundingBox.y + fishBoundingBox.height > obstacleBoundingBox.y) {
-                    //cout<<"VOCE MORREU"<<endl;
-                    //cout<<"Sua pontuação foi: "<<score<<endl;
+                    cout << "VOCE MORREU!" << endl;
                     salvarPontuacao(highScore);
+                    gameOverScene(score, highScore);
                 }//Remover pontos obstáculos colididos
                 obstacles.erase(remove_if(obstacles.begin(), obstacles.end(),
                 [fishX, fishY, fishImage](const GameObject& obstacle) {
@@ -180,7 +231,7 @@ int main() {
                 fishBoundingBox.x + fishBoundingBox.width > pointBoundingBox.x &&
                 fishBoundingBox.y < pointBoundingBox.y + pointBoundingBox.height &&
                 fishBoundingBox.y + fishBoundingBox.height > pointBoundingBox.y) {
-                cout << "Colisão com ponto!" << endl;
+                cout << "Colisão com ponto! score++;" << endl;
                 score++;
                 point.position = Point(windowWidth, rand() % (windowHeight - PointImage.rows));
             }// Remover pontos colididos
@@ -201,6 +252,7 @@ int main() {
         }// Verificar se a pontuação atual é maior que a pontuação mais alta
         if (score > highScore) {
         highScore = score;
+        beatRecord = true;
         salvarPontuacao(highScore);
         }
         
@@ -208,15 +260,18 @@ int main() {
         for (auto& obstacle : obstacles) {
             obstacle.draw(frame);
             obstacle.position.x -= obstacleSpeed;
+
         }// Desenhar o ponto no frame
         point.draw(frame);
         point.position.x -= obstacleSpeed;
 
+
+
         // Adicionar novos obstáculos
         if (obstacles.empty() || obstacles.back().position.x <= windowWidth - obstacleSpacing) {
-            Point obstaclePosition(windowWidth, rand() % (windowHeight - obstacleImage.rows));
+            if(score > 0){Point obstaclePosition(windowWidth, rand() % (windowHeight - obstacleImage.rows));
             obstacles.emplace_back(sharkImage, obstaclePosition);
-            if (score >= 10) {
+            }if (score >= 10) {
             Point obstaclePosition1(windowWidth, rand() % (windowHeight - obstacleImage.rows));
             obstacles.emplace_back(obstacleImage, obstaclePosition1);
             }   
@@ -228,11 +283,11 @@ int main() {
             Point obstaclePosition3(windowWidth, rand() % (windowHeight - obstacleImage.rows));
             obstacles.emplace_back(blueJellyImage, obstaclePosition3);
             }   
-            if (score % 2 == 0) {
+            if (score % 2 == 0 && score > 0) {
             // Adicione um novo ponto
             Point pointPosition(windowWidth, rand() % (windowHeight - PointImage.rows));
             obstacles.emplace_back(PointImage, pointPosition);
-        }
+            }
         }// Exibir o frame resultante
         imshow("FaceFish", frame);
         
