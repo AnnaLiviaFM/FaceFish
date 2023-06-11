@@ -2,6 +2,8 @@
 #include <vector>
 #include <cstdlib>
 #include <ctime>
+#include <fstream>
+
 
 using namespace cv;
 using namespace std;
@@ -31,6 +33,18 @@ public:
         }
     }
 };
+//salvar pontuação em arquivo
+void salvarPontuacao(int score) {
+    std::ofstream arquivo("score.txt");
+    if (arquivo.is_open()) {
+        arquivo << score;
+        arquivo.close();
+        std::cout << "Pontuação salva com sucesso!" << std::endl;
+    } else {
+        std::cout << "Erro ao abrir o arquivo de pontuação." << std::endl;
+    }
+}
+
 //void gameOverScene() {}
 int main() {
     // Carregar o haarcascade para detecção de rosto
@@ -99,8 +113,9 @@ int main() {
     // Configurar o objeto ponto
     GameObject point(PointImage, Point(windowWidth, rand() % (windowHeight - PointImage.rows)));
 
-    // Variável para controlar a contagem de pontos
-    int score = 0;
+    
+    int score = 0;// Variável para controlar a contagem de pontos
+    int highScore = 0;  // Variável para armazenar a pontuação mais alta
 
     // Loop principal do jogo
     while (true) {
@@ -145,9 +160,9 @@ int main() {
                     fishBoundingBox.x + fishBoundingBox.width > obstacleBoundingBox.x &&
                     fishBoundingBox.y < obstacleBoundingBox.y + obstacleBoundingBox.height &&
                     fishBoundingBox.y + fishBoundingBox.height > obstacleBoundingBox.y) {
-                    cout<<"VOCE MORREU"<<endl;
-                    cout<<"Sua pontuação foi: "<<score<<endl;
-                    //return gameOverScene();
+                    //cout<<"VOCE MORREU"<<endl;
+                    //cout<<"Sua pontuação foi: "<<score<<endl;
+                    salvarPontuacao(highScore);
                 }//Remover pontos obstáculos colididos
                 obstacles.erase(remove_if(obstacles.begin(), obstacles.end(),
                 [fishX, fishY, fishImage](const GameObject& obstacle) {
@@ -183,7 +198,13 @@ int main() {
                     }),
                     obstacles.end());
             }
-        }// Desenhar os obstáculos no frame
+        }// Verificar se a pontuação atual é maior que a pontuação mais alta
+        if (score > highScore) {
+        highScore = score;
+        salvarPontuacao(highScore);
+        }
+        
+        // Desenhar os obstáculos no frame
         for (auto& obstacle : obstacles) {
             obstacle.draw(frame);
             obstacle.position.x -= obstacleSpeed;
@@ -218,6 +239,7 @@ int main() {
         // Verificar se a tecla 'Esc' foi pressionada para sair do jogo
         if (waitKey(1) == 27)
             break;
+        
     }// Encerrar a captura de vídeo e fechar a janela do jogo
     capture.release();
     destroyAllWindows();
