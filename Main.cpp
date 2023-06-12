@@ -33,6 +33,25 @@ public:
         }
     }
 };
+
+
+void showStartMenu(const Mat& startImage) {
+    namedWindow("Start Menu", WINDOW_NORMAL);
+    resizeWindow("Start Menu", startImage.cols, startImage.rows);
+    imshow("Start Menu", startImage);
+    
+    cout << "Pressione a tecla Enter para iniciar o jogo..." << endl;
+    while (true) {
+        if (waitKey(0) == 13) {  // 13 é o código ASCII para a tecla Enter
+            destroyWindow("Start Menu");
+            break;
+        }
+    }
+     setWindowProperty("FaceFish", WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);  // Define a janela "FaceFish" como tela cheia
+
+}
+
+
 //salvar pontuação em arquivo
 void salvarPontuacao(int score) {
     std::ofstream arquivo("score.txt");
@@ -81,6 +100,12 @@ void gameOverScene(int score, int highScore) {
     }
 
     // Exibir a cena de Game Over
+
+
+    resize(startImage, startImage, Size(newWidth, newHeight));
+
+    showStartMenu(startImage);
+
     namedWindow("Game Over", WINDOW_AUTOSIZE);
     imshow("Game Over", frame);
     waitKey(0);
@@ -156,6 +181,14 @@ int main() {
         return -1;
     }
     
+    Mat webcamImage;
+    capture.read(webcamImage);
+
+    // Aumentar o tamanho da imagem da webcam
+    int newWidth = 1920;
+    int newHeight = 1080;
+    resize(webcamImage, webcamImage, Size(newWidth, newHeight));
+
     // Configurar o tamanho da janela do jogo
     int windowWidth = capture.get(CAP_PROP_FRAME_WIDTH);
     int windowHeight = capture.get(CAP_PROP_FRAME_HEIGHT);
@@ -164,10 +197,20 @@ int main() {
     namedWindow("FaceFish", WINDOW_NORMAL);
     resizeWindow("FaceFish", windowWidth, windowHeight);
 
+    Mat startImage = imread("Iniciar.png");
+    if (startImage.empty()) {
+        cout << "Não foi possível carregar a imagem de início." << endl;
+        return -1;
+    }
+
+    resize(startImage, startImage, Size(newWidth, newHeight));
+
+    showStartMenu(startImage);
+
     // Configurar os obstáculos
     vector<GameObject> obstacles;
     int obstacleSpacing = 400;  // Espaçamento entre os obstáculos
-    int obstacleSpeed = 7;      // Velocidade dos obstáculos
+    int obstacleSpeed = 5;      // Velocidade dos obstáculos
 
     // Configurar o objeto ponto
     GameObject point(PointImage, Point(windowWidth, rand() % (windowHeight - PointImage.rows)));
