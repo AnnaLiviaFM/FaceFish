@@ -217,11 +217,10 @@ int main() {
                     fishBoundingBox.x + fishBoundingBox.width > obstacleBoundingBox.x &&
                     fishBoundingBox.y < obstacleBoundingBox.y + obstacleBoundingBox.height &&
                     fishBoundingBox.y + fishBoundingBox.height > obstacleBoundingBox.y) {
-                    throw("Voce morreu");
                     salvarPontuacao(highScore);
                     gameOverScene(score, highScore);
-                }//Remover pontos obstáculos colididos
-                obstacles.erase(remove_if(obstacles.begin(), obstacles.end(),
+                    //Remover pontos obstáculos colididos
+                    obstacles.erase(remove_if(obstacles.begin(), obstacles.end(),
                 [fishX, fishY, fishImage](const GameObject& obstacle) {
                     Rect obstacleBoundingBox(obstacle.position.x, obstacle.position.y, obstacle.image.cols, obstacle.image.rows);
                     Rect fishBoundingBox(fishX, fishY, fishImage.cols, fishImage.rows);
@@ -231,6 +230,8 @@ int main() {
                         fishBoundingBox.y + fishBoundingBox.height > obstacleBoundingBox.y;
                 }),
                 obstacles.end());
+                }
+        
             }// Verificar colisão entre o peixe e o ponto
             Rect pointBoundingBox(point.position.x, point.position.y, point.image.cols, point.image.rows);
             if (fishBoundingBox.x < pointBoundingBox.x + pointBoundingBox.width &&
