@@ -32,7 +32,6 @@ public:
         }
     }
 };
-
 //salvar pontuação em arquivo
 void salvarPontuacao(int score) {
     std::ofstream arquivo("score.txt");
@@ -48,7 +47,7 @@ bool beatRecord = false;//veriicador de record;
 
 void gameOverScene(int score, int highScore) {
     Mat frame(480, 640, CV_8UC3, Scalar(0, 0, 0));
-
+    cout << "fim de jogo" << endl;
     // Definir as propriedades do texto
     int fontFace = FONT_HERSHEY_SIMPLEX;
     double fontScale = 1.5;
@@ -74,7 +73,7 @@ void gameOverScene(int score, int highScore) {
     putText(frame, highScoreText, textOrg, fontFace, fontScale, Scalar(255, 255, 255), thickness);
     // Verificar se o recorde foi batido e exibir mensagem de parabéns
     if (beatRecord) {
-        string congratsText = "Parabéns! Novo recorde!";
+        string congratsText = "Congratulations! New record!";
         textSize = getTextSize(congratsText, fontFace, fontScale, thickness, &baseline);
         textOrg = Point((frame.cols - textSize.width) / 2, textOrg.y + textSize.height * 2);
         putText(frame, congratsText, textOrg, fontFace, fontScale, Scalar(255, 255, 255), thickness);
@@ -88,7 +87,7 @@ void gameOverScene(int score, int highScore) {
 }
 
 int main() {
-     Mat frame(480, 640, CV_8UC3, Scalar(0, 0, 0));
+     Mat frame(640, 640, CV_8UC3, Scalar(0, 0, 0));
     int score = 0;// Variável para controlar a contagem de pontos
     int highScore = 0;  // Variável para armazenar a pontuação mais alta
 
@@ -161,7 +160,7 @@ int main() {
     // Configurar os obstáculos
     vector<GameObject> obstacles;
     int obstacleSpacing = 400;  // Espaçamento entre os obstáculos
-    int obstacleSpeed = 5;      // Velocidade dos obstáculos
+    int obstacleSpeed = 7;      // Velocidade dos obstáculos
     //Configurar os obstáculos
     GameObject shark(sharkImage, Point(windowWidth, rand() % (windowHeight - sharkImage.rows)));
 
@@ -255,18 +254,15 @@ int main() {
         beatRecord = true;
         salvarPontuacao(highScore);
         }
-        
+        // Desenhar o ponto no frame
+        point.draw(frame);
+        point.position.x -= obstacleSpeed;
         // Desenhar os obstáculos no frame
+        
         for (auto& obstacle : obstacles) {
             obstacle.draw(frame);
             obstacle.position.x -= obstacleSpeed;
-
-        }// Desenhar o ponto no frame
-        point.draw(frame);
-        point.position.x -= obstacleSpeed;
-
-
-
+        }
         // Adicionar novos obstáculos
         if (obstacles.empty() || obstacles.back().position.x <= windowWidth - obstacleSpacing) {
             if(score > 0){Point obstaclePosition(windowWidth, rand() % (windowHeight - obstacleImage.rows));
@@ -283,11 +279,6 @@ int main() {
             Point obstaclePosition3(windowWidth, rand() % (windowHeight - obstacleImage.rows));
             obstacles.emplace_back(blueJellyImage, obstaclePosition3);
             }   
-            if (score % 2 == 0 && score > 0) {
-            // Adicione um novo ponto
-            Point pointPosition(windowWidth, rand() % (windowHeight - PointImage.rows));
-            obstacles.emplace_back(PointImage, pointPosition);
-            }
         }// Exibir o frame resultante
         imshow("FaceFish", frame);
         
