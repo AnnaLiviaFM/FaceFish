@@ -34,7 +34,6 @@ public:
     }
 };
 
-
 void showStartMenu(const Mat& startImage) {
     namedWindow("Start Menu", WINDOW_NORMAL);
     resizeWindow("Start Menu", startImage.cols, startImage.rows);
@@ -42,15 +41,14 @@ void showStartMenu(const Mat& startImage) {
     
     cout << "Pressione a tecla Enter para iniciar o jogo..." << endl;
     while (true) {
-        if (waitKey(0) == 13) {  // 13 é o código ASCII para a tecla Enter
+        if (waitKey(0) == 13) {
             destroyWindow("Start Menu");
             break;
         }
     }
-     setWindowProperty("FaceFish", WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);  // Define a janela "FaceFish" como tela cheia
+    setWindowProperty("FaceFish", WND_PROP_FULLSCREEN, WINDOW_FULLSCREEN);  // Define a janela "FaceFish" como tela cheia
 
 }
-
 
 //salvar pontuação em arquivo
 void salvarPontuacao(int score) {
@@ -65,7 +63,7 @@ void salvarPontuacao(int score) {
 } 
 bool beatRecord = false;//veriicador de record;
 
-void gameOverScene(int score, int highScore) {
+void gameOverScene(int score, int highScore) { 
     Mat frame(480, 640, CV_8UC3, Scalar(0, 0, 0));
     cout << "fim de jogo" << endl;
     // Definir as propriedades do texto
@@ -101,15 +99,17 @@ void gameOverScene(int score, int highScore) {
 
     // Exibir a cena de Game Over
 
-
-    resize(startImage, startImage, Size(newWidth, newHeight));
-
-    showStartMenu(startImage);
-
     namedWindow("Game Over", WINDOW_AUTOSIZE);
     imshow("Game Over", frame);
-    waitKey(0);
-    destroyWindow("Game Over");
+    //fica aguardando o enter para fechar a janela
+    while (true) {
+        int key = waitKey(0);
+        if (key == 13) {  
+            score = 0;
+            destroyWindow("Game Over");
+            break;
+        }
+    }
 }
 // tocar som quanto pega o ponto 
 void playSoundEffect() {
@@ -118,10 +118,10 @@ void playSoundEffect() {
 }
 
 int main() {
-
-    Mat frame(640, 640, CV_8UC3, Scalar(0, 0, 0));
     int score = 0;// Variável para controlar a contagem de pontos
-    int highScore = 0;  // Variável para armazenar a pontuação mais alta
+int highScore = 0;  // Variável para armazenar a pontuação mais alta
+    Mat frame(640, 640, CV_8UC3, Scalar(0, 0, 0));
+    
 
     // Verificar a pontuação mais alta do arquivo
     std::ifstream arquivo("score.txt");
@@ -147,7 +147,6 @@ int main() {
         cout << "Não foi possível carregar a imagem do peixe." << std::endl;
         return -1;
     }
-
     // Carregar as imagens dos obstáculos adicionais
     Mat sharkImage = imread("shark.png", IMREAD_UNCHANGED);
     if (sharkImage.empty()) {
@@ -180,7 +179,12 @@ int main() {
         cout << "Não foi possível iniciar a captura de vídeo." << std::endl;
         return -1;
     }
-    
+    // Configurar as propriedades do texto da pontuação 
+    int fontFace = FONT_HERSHEY_SIMPLEX;
+    double fontScale = 1.0;
+    int thickness = 2;
+    Scalar color(255, 255, 255); // Cor do texto (branco)
+
     Mat webcamImage;
     capture.read(webcamImage);
 
@@ -210,15 +214,13 @@ int main() {
     // Configurar os obstáculos
     vector<GameObject> obstacles;
     int obstacleSpacing = 400;  // Espaçamento entre os obstáculos
-    int obstacleSpeed = 5;      // Velocidade dos obstáculos
+    int obstacleSpeed = 7;      // Velocidade dos obstáculos
 
     // Configurar o objeto ponto
     GameObject point(PointImage, Point(windowWidth, rand() % (windowHeight - PointImage.rows)));
 
     // Loop principal do jogo
     while (true) {
-        // Iniciar a reprodução da música usando o comando 'aplay'
-        //system("aplay -q MusicBackground.wav &");
         // Capturar o próximo frame da webcam
         Mat frame;
         capture >> frame;
@@ -226,9 +228,16 @@ int main() {
         // Verificar se o frame está vazio (fim da captura)
         if (frame.empty())
             break;
-        // Espelhar o frame horizontalmente
-        flip(frame, frame, 1);
+        // Converter a pontuação para string
+        string scoreText = "Score: " + to_string(score);
 
+        // Definir a posição do texto no canto superior esquerdo
+        Point scorePosition(10, 30);
+
+        // Desenhar o texto no frame
+        putText(frame, scoreText, scorePosition, fontFace, fontScale, color, thickness);
+
+        flip(frame, frame, 1);// Espelhar o frame horizontalmente
 
         // Converter o frame para escala de cinza
         Mat grayFrame;
@@ -318,7 +327,7 @@ int main() {
         }
         // Adicionar novos obstáculos
         if (obstacles.empty() || obstacles.back().position.x <= windowWidth - obstacleSpacing) {
-            if(score > 0){Point obstaclePosition(windowWidth, rand() % (windowHeight - obstacleImage.rows));
+            if(score >= 0){Point obstaclePosition(windowWidth, rand() % (windowHeight - obstacleImage.rows));
             obstacles.emplace_back(sharkImage, obstaclePosition);
             }if (score >= 5) {
             Point obstaclePosition1(windowWidth, rand() % (windowHeight - obstacleImage.rows));
