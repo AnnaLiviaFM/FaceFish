@@ -277,18 +277,18 @@ int main() {
         if (obstacles.empty() || obstacles.back().position.x <= windowWidth - obstacleSpacing) {
             if(score > 0){Point obstaclePosition(windowWidth, rand() % (windowHeight - obstacleImage.rows));
             obstacles.emplace_back(sharkImage, obstaclePosition);
-            }if (score >= 10) {
+            }if (score >= 5) {
             Point obstaclePosition1(windowWidth, rand() % (windowHeight - obstacleImage.rows));
             obstacles.emplace_back(obstacleImage, obstaclePosition1);
             }   
-            if (score >= 15) {
+            if (score >= 10) {
             Point obstaclePosition2(windowWidth, rand() % (windowHeight - obstacleImage.rows));
             obstacles.emplace_back(pinkJellyImage, obstaclePosition2);
             }   
-            if (score >= 20) {
+            if (score >= 10) {
             Point obstaclePosition3(windowWidth, rand() % (windowHeight - obstacleImage.rows));
             obstacles.emplace_back(blueJellyImage, obstaclePosition3);
-            }   
+            }
         }// Exibir o frame resultante
         imshow("FaceFish", frame);
         
