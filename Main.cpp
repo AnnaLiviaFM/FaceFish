@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
+#include <cstdlib>
 
 using namespace cv;
 using namespace std;
@@ -84,6 +85,11 @@ void gameOverScene(int score, int highScore) {
     imshow("Game Over", frame);
     waitKey(0);
     destroyWindow("Game Over");
+}
+// tocar som quanto pega o ponto 
+void playSoundEffect() {
+    // Execute the 'aplay' command to play the sound effect file
+    system("play -q SoundPoint.ogg"); // sudo apt install sox
 }
 
 int main() {
@@ -168,6 +174,8 @@ int main() {
 
     // Loop principal do jogo
     while (true) {
+        // Iniciar a reprodução da música usando o comando 'aplay'
+        //system("aplay -q MusicBackground.wav &");
         // Capturar o próximo frame da webcam
         Mat frame;
         capture >> frame;
@@ -209,7 +217,7 @@ int main() {
                     fishBoundingBox.x + fishBoundingBox.width > obstacleBoundingBox.x &&
                     fishBoundingBox.y < obstacleBoundingBox.y + obstacleBoundingBox.height &&
                     fishBoundingBox.y + fishBoundingBox.height > obstacleBoundingBox.y) {
-                    cout << "VOCE MORREU!" << endl;
+                    throw("Voce morreu");
                     salvarPontuacao(highScore);
                     gameOverScene(score, highScore);
                 }//Remover pontos obstáculos colididos
@@ -232,6 +240,8 @@ int main() {
                 cout << "Colisão com ponto! score++;" << endl;
                 score++;
                 point.position = Point(windowWidth, rand() % (windowHeight - PointImage.rows));
+                // Play the sound effect playSoundEffect();
+
             }// Remover pontos colididos
             if (fishBoundingBox.x < pointBoundingBox.x + pointBoundingBox.width &&
                 fishBoundingBox.x + fishBoundingBox.width > pointBoundingBox.x &&
@@ -282,9 +292,9 @@ int main() {
         imshow("FaceFish", frame);
         
         // Verificar se a tecla 'Esc' foi pressionada para sair do jogo
-        if (waitKey(1) == 27)
+        if (waitKey(1) == 27){
             break;
-        
+        }
     }// Encerrar a captura de vídeo e fechar a janela do jogo
     capture.release();
     destroyAllWindows();
