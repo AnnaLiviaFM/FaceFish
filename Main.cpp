@@ -87,7 +87,8 @@ void gameOverScene(int score, int highScore) {
 }
 
 int main() {
-     Mat frame(640, 640, CV_8UC3, Scalar(0, 0, 0));
+
+    Mat frame(640, 640, CV_8UC3, Scalar(0, 0, 0));
     int score = 0;// Variável para controlar a contagem de pontos
     int highScore = 0;  // Variável para armazenar a pontuação mais alta
 
@@ -161,8 +162,6 @@ int main() {
     vector<GameObject> obstacles;
     int obstacleSpacing = 400;  // Espaçamento entre os obstáculos
     int obstacleSpeed = 7;      // Velocidade dos obstáculos
-    //Configurar os obstáculos
-    GameObject shark(sharkImage, Point(windowWidth, rand() % (windowHeight - sharkImage.rows)));
 
     // Configurar o objeto ponto
     GameObject point(PointImage, Point(windowWidth, rand() % (windowHeight - PointImage.rows)));
