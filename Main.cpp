@@ -102,14 +102,16 @@ void gameOverScene(int score, int highScore) {
     namedWindow("Game Over", WINDOW_AUTOSIZE);
     imshow("Game Over", frame);
     //fica aguardando o enter para fechar a janela
-    while (true) {
         int key = waitKey(0);
         if (key == 27) {  
             score = 0;
             destroyWindow("Game Over");
-            break;
+            throw("close game");
         }
-    }
+        else if (key == 13) {
+            score = 0;
+            destroyWindow("Game Over");
+        }
 }
 // tocar som quanto pega o ponto 
 void playSoundEffect() {
