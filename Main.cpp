@@ -104,7 +104,7 @@ void gameOverScene(int score, int highScore) {
     //fica aguardando o enter para fechar a janela
     while (true) {
         int key = waitKey(0);
-        if (key == 13) {  
+        if (key == 27) {  
             score = 0;
             destroyWindow("Game Over");
             break;
@@ -294,13 +294,7 @@ int highScore = 0;  // Variável para armazenar a pontuação mais alta
                 score++;
                 point.position = Point(windowWidth, rand() % (windowHeight - PointImage.rows));
                 // Play the sound effect playSoundEffect();
-
-            }// Remover pontos colididos
-            if (fishBoundingBox.x < pointBoundingBox.x + pointBoundingBox.width &&
-                fishBoundingBox.x + fishBoundingBox.width > pointBoundingBox.x &&
-                fishBoundingBox.y < pointBoundingBox.y + pointBoundingBox.height &&
-                fishBoundingBox.y + fishBoundingBox.height > pointBoundingBox.y) {
-                obstacles.erase(remove_if(obstacles.begin(), obstacles.end(),
+                obstacles.erase(remove_if(obstacles.begin(), obstacles.end(),// Remover pontos colididos
                     [pointBoundingBox](const GameObject& obstacle) {
                         Rect obstacleBoundingBox(obstacle.position.x, obstacle.position.y, obstacle.image.cols, obstacle.image.rows);
                         return pointBoundingBox.x < obstacleBoundingBox.x + obstacleBoundingBox.width &&
